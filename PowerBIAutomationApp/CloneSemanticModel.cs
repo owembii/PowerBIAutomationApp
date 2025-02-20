@@ -11,12 +11,12 @@ using PowerBIAutomationApp;
 
 namespace PBIFunctionApp
 {
-    public class CloneReport
+    public class CloneSemanticModel
     {
         private readonly ILogger<CloneReport> _logger;
         private readonly ILogger<GetAccessKey> _accessKeyLogger;
 
-        public CloneReport(ILogger<CloneReport> logger, ILogger<GetAccessKey> accessKeyLogger)
+        public CloneSemanticModel(ILogger<CloneReport> logger, ILogger<GetAccessKey> accessKeyLogger)
         {
             _logger = logger;
             _accessKeyLogger = accessKeyLogger;
