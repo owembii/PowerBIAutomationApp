@@ -22,10 +22,10 @@ namespace PBIFunctionApp
             _accessKeyLogger = accessKeyLogger;
         }
 
-        [Function("CloneReport")]
+        [Function("CloneSemanticModel")]
         public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Function, "post",
-            Route = "workspaces/{sourceWorkspaceId}/reports/{reportId}/clone-report")] HttpRequest req,
+            Route = "workspaces/{sourceWorkspaceId}/reports/{reportId}/clone-semantic-model")] HttpRequest req,
             string sourceWorkspaceId,
             string reportId)
         {
