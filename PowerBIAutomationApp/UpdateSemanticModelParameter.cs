@@ -1,17 +1,12 @@
-﻿using System;
-using System.Net.Http;
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
-using PBIFunctionApp;
-using PBIFunctionApp.DTO;
+using PowerBIAutomationApp.DTO;
 
-
-namespace PBIFunctionApp
+namespace PowerBIAutomationApp
 {
     public class UpdateSemanticModelParameter
     {

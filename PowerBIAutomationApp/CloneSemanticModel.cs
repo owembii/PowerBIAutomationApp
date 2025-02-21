@@ -1,15 +1,13 @@
 ﻿using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using PBIFunctionApp.DTO;
+using PowerBIAutomationApp.DTO;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
-using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
-using PowerBIAutomationApp;
 
-namespace PBIFunctionApp
+namespace PowerBIAutomationApp
 {
     public class CloneSemanticModel
     {

@@ -1,19 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using System.Net.Http.Headers;
-using System.Text.Json;
-using PBIFunctionApp;
 using Microsoft.Azure.Functions.Worker;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker.Http;
-using System.Net.Http.Headers;
 
-
-namespace PBIFunctionApp
+namespace PowerBIAutomationApp
 {
     public class GetSemanticModelParameterValue
     {

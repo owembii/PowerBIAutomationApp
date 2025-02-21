@@ -1,14 +1,9 @@
-﻿using System;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Threading.Tasks;
-using PBIFunctionApp;
+﻿using System.Net.Http.Headers;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
-using PowerBIAutomationApp;
 
-namespace PBIFunctionApp
+namespace PowerBIAutomationApp
 {
     public class DeleteSemanticModel
     {

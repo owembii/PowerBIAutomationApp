@@ -3,11 +3,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
-using PBIFunctionApp;
-using PowerBIAutomationApp;
 
-namespace PBIFunctionApp
+namespace PowerBIAutomationApp
 {
     public class DeleteReport
     {

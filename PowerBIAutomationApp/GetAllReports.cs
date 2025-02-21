@@ -1,12 +1,10 @@
 ﻿using System.Net.Http.Headers;
-using System.Text.Json;
-using PBIFunctionApp;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 
-namespace PBIFunctionApp
+namespace PowerBIAutomationApp
 {
     public class GetAllReports
     {

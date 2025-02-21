@@ -1,17 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
-using PBIFunctionApp.DTOs;
+using PowerBIAutomationApp.DTO;
 
-namespace PBIFunctionApp.Workspaces
+namespace PowerBIAutomationApp
 {
     public class Workspace
     {
