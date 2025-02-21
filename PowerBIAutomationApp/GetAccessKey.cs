@@ -5,24 +5,19 @@ using Microsoft.Identity.Client;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 
-namespace PBIFunctionApp
+namespace PowerBIAutomationApp
 {
-    public class GetAccessKey
+    public class GetAccessKey(ILogger<GetAccessKey> logger)
     {
-        private readonly ILogger<GetAccessKey> _logger;
+        private readonly ILogger<GetAccessKey> _logger = logger;
         private readonly string? clientId = Environment.GetEnvironmentVariable("FBDEV_AzureClientID", EnvironmentVariableTarget.Process); // Application Id
         private readonly string? clientSecret = Environment.GetEnvironmentVariable("FBDEV_AzureClientSecret", EnvironmentVariableTarget.Process);
         private readonly string? tenantId = Environment.GetEnvironmentVariable("FBDEV_AzureTenantID", EnvironmentVariableTarget.Process); // Directory Id
 
-        public GetAccessKey(ILogger<GetAccessKey> logger)
-        {
-            _logger = logger;
-        }
-
         [Function("GetAccessKey")]
         public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequestData req,
-            FunctionContext executionContext)  // Updated to accept FunctionContext
+            [HttpTrigger(AuthorizationLevel.Function, "get", "post")]
+            HttpRequestData req)  // Updated to accept FunctionContext
         {
             string accessToken;
 
@@ -31,9 +26,9 @@ namespace PBIFunctionApp
                 accessToken = await GetAccessToken(); // Call the method to retrieve the access token
                 return new OkObjectResult(accessToken);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogError($"An error occurred while getting the access token: {ex.Message}");
+                _logger.LogError($"An error occurred while getting the access token");
                 return new StatusCodeResult(StatusCodes.Status500InternalServerError);
             }
         }
