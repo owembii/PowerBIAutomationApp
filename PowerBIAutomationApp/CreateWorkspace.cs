@@ -16,16 +16,13 @@ namespace PBIFunctionApp.Workspaces
     public class Workspace
     {
         private readonly ILogger<Workspace> _logger;
-        private static readonly HttpClient _httpClient = new HttpClient();
+        private readonly ILogger<GetAccessKey> _accessKeyLogger;
         private static readonly string baseUrl = "https://api.powerbi.com/v1.0/myorg/groups";
 
-        private static readonly string clientId = Environment.GetEnvironmentVariable("FBDEV_AzureClientID");
-        private static readonly string tenantId = Environment.GetEnvironmentVariable("FBDEV_AzureTenantID");
-        private static readonly string clientSecret = Environment.GetEnvironmentVariable("FBDEV_AzureClientSecret");
-
-        public Workspace(ILogger<Workspace> logger)
+        public Workspace(ILogger<Workspace> logger, ILogger<GetAccessKey> accessKeyLogger)
         {
             _logger = logger;
+            _accessKeyLogger = accessKeyLogger;
         }
 
         [Function("CreatePowerBIWorkspace")]
@@ -44,7 +41,8 @@ namespace PBIFunctionApp.Workspaces
             string accessToken;
             try
             {
-                accessToken = await GetAccessTokenAsync();
+                var authProvider = new GetAccessKey(_accessKeyLogger);
+                accessToken = await authProvider.GetAccessToken();
             }
             catch (Exception ex)
             {
@@ -75,29 +73,29 @@ namespace PBIFunctionApp.Workspaces
             return response;
         }
 
-        private static async Task<string> GetAccessTokenAsync()
-        {
-            string tokenUrl = $"https://login.microsoftonline.com/{tenantId}/oauth2/v2.0/token";
-            var data = new Dictionary<string, string>
-            {
-                { "grant_type", "client_credentials" },
-                { "scope", "https://analysis.windows.net/powerbi/api/.default" },
-                { "client_id", clientId },
-                { "client_secret", clientSecret }
-            };
+        //private static async Task<string> GetAccessTokenAsync()
+        //{
+        //    string tokenUrl = $"https://login.microsoftonline.com/{tenantId}/oauth2/v2.0/token";
+        //    var data = new Dictionary<string, string>
+        //    {
+        //        { "grant_type", "client_credentials" },
+        //        { "scope", "https://analysis.windows.net/powerbi/api/.default" },
+        //        { "client_id", clientId },
+        //        { "client_secret", clientSecret }
+        //    };
 
-            using var content = new FormUrlEncodedContent(data);
-            HttpResponseMessage response = await _httpClient.PostAsync(tokenUrl, content);
-            string responseJson = await response.Content.ReadAsStringAsync();
+        //    using var content = new FormUrlEncodedContent(data);
+        //    HttpResponseMessage response = await _httpClient.PostAsync(tokenUrl, content);
+        //    string responseJson = await response.Content.ReadAsStringAsync();
 
-            if (!response.IsSuccessStatusCode)
-            {
-                throw new Exception($"Failed to retrieve token: {responseJson}");
-            }
+        //    if (!response.IsSuccessStatusCode)
+        //    {
+        //        throw new Exception($"Failed to retrieve token: {responseJson}");
+        //    }
 
-            var tokenObj = JsonSerializer.Deserialize<TokenResponse>(responseJson);
-            return tokenObj?.AccessToken ?? throw new Exception("Access token not found in response.");
-        }
+        //    var tokenObj = JsonSerializer.Deserialize<TokenResponse>(responseJson);
+        //    return tokenObj?.AccessToken ?? throw new Exception("Access token not found in response.");
+        //}
 
         [Function("GetAllPowerBIWorkspaces")]
         public async Task<HttpResponseData> GetAllWorkspaces(
@@ -108,7 +106,8 @@ namespace PBIFunctionApp.Workspaces
             string accessToken;
             try
             {
-                accessToken = await GetAccessTokenAsync();
+                var authProvider = new GetAccessKey(_accessKeyLogger);
+                accessToken = await authProvider.GetAccessToken();
             }
             catch (Exception ex)
             {
@@ -196,7 +195,8 @@ namespace PBIFunctionApp.Workspaces
             string accessToken;
             try
             {
-                accessToken = await GetAccessTokenAsync();
+                var authProvider = new GetAccessKey(_accessKeyLogger);
+                accessToken = await authProvider.GetAccessToken();
             }
             catch (Exception ex)
             {
