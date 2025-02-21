@@ -8,6 +8,7 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 using PowerBIAutomationApp;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace PBIFunctionApp
 {
@@ -38,30 +39,24 @@ namespace PBIFunctionApp
 
                 // Read and deserialize request body
                 string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-                var cloneRequest = JsonSerializer.Deserialize<CloneReportDTO>(requestBody, new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
+                var cloneRequest = new CloneReportDTO();
 
-                // Ensure the object is not null and assign a name if missing
-                if (cloneRequest == null)
+                // Only deserialize when request body is not null or empty
+                if (!string.IsNullOrWhiteSpace(requestBody))
                 {
-                    cloneRequest = new CloneReportDTO { name = string.Empty };
-                }
-
-                if (string.IsNullOrWhiteSpace(cloneRequest.name))
-                {
-                    _logger.LogInformation("No new report name provided. Fetching original report name.");
-                    cloneRequest.name = await GetOriginalReportName(sourceWorkspaceId, reportId, accessToken);
+                    cloneRequest = JsonSerializer.Deserialize<CloneReportDTO>(requestBody, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
                 }
 
                 // Clone the report
                 string newReportID = await CloneReportAsync(
                     sourceWorkspaceId,
                     reportId,
-                    cloneRequest.name,
-                    cloneRequest.targetWorkspaceId,
-                    cloneRequest.targetModelId,
+                    cloneRequest?.name,
+                    cloneRequest?.targetWorkspaceId,
+                    cloneRequest?.targetModelId,
                     accessToken);
 
                 _logger.LogInformation($"Successfully cloned report. New Report ID: {newReportID}");
@@ -110,7 +105,7 @@ namespace PBIFunctionApp
         private async Task<string> CloneReportAsync(
             string sourceWorkspaceId,
             string reportId,
-            string reportName,
+            string? reportName,
             string? targetWorkspaceId,
             string? targetModelId,
             string accessToken)
@@ -122,6 +117,13 @@ namespace PBIFunctionApp
                 // Set Authorization Header
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+                // If no report name is provided, fetch the original report name
+                if (string.IsNullOrWhiteSpace(reportName))
+                {
+                    _logger.LogInformation("No report name provided. Retrieving current report name.");
+                    reportName = await GetOriginalReportName(sourceWorkspaceId, reportId, accessToken);
+                }
 
                 var requestBody = new
                 {
