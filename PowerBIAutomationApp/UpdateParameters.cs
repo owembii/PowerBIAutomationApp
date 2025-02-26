@@ -5,18 +5,17 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
+using FBFunctionServiceBL.UtilityVault;
 
 namespace PowerBIAutomationApp
 {
     public class UpdateParameters
     {
         private readonly ILogger<UpdateParameters> _logger;
-        private readonly ILogger<GetAccessKey> _accessKeyLogger;
 
-        public UpdateParameters(ILogger<UpdateParameters> logger, ILogger<GetAccessKey> accessKeyLogger)
+        public UpdateParameters(ILogger<UpdateParameters> logger)
         {
             _logger = logger;
-            _accessKeyLogger = accessKeyLogger;
         }
 
         [Function("UpdateParameters")]
@@ -29,8 +28,7 @@ namespace PowerBIAutomationApp
 
             try
             {
-                var authProvider = new GetAccessKey(_accessKeyLogger);
-                string accessToken = await authProvider.GetAccessToken();
+                string accessToken = await FBConfigManager.GetAccessToken();
 
                 _logger.LogInformation($"Updating parameters for dataset: {modelId}");
 

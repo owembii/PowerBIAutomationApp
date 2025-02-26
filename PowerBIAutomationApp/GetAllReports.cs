@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Headers;
+using FBFunctionServiceBL.UtilityVault;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
@@ -9,12 +10,10 @@ namespace PowerBIAutomationApp
     public class GetAllReports
     {
         private readonly ILogger<GetAllReports> _logger;
-        private readonly ILogger<GetAccessKey> _accessKeyLogger;
 
-        public GetAllReports(ILogger<GetAllReports> logger, ILogger<GetAccessKey> accessKeyLogger)
+        public GetAllReports(ILogger<GetAllReports> logger)
         {
             _logger = logger;
-            _accessKeyLogger = accessKeyLogger;
         }
 
         [Function("GetAllReports")]
@@ -30,8 +29,7 @@ namespace PowerBIAutomationApp
                 }
 
                 // Get access token
-                var authProvider = new GetAccessKey(_accessKeyLogger);
-                string accessToken = await authProvider.GetAccessToken();
+                string accessToken = await FBConfigManager.GetAccessToken();
 
                 // Fetch reports
                 string reportsJson = await FetchReportsAsync(workspaceID, accessToken);

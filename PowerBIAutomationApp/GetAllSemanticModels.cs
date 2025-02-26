@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Headers;
+using FBFunctionServiceBL.UtilityVault;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
@@ -9,12 +10,10 @@ namespace PowerBIAutomationApp
     public class GetAllSemanticModels
     {
         private readonly ILogger<GetAllSemanticModels> _logger;
-        private readonly ILogger<GetAccessKey> _accessKeyLogger;
 
-        public GetAllSemanticModels(ILogger<GetAllSemanticModels> logger, ILogger<GetAccessKey> accessKeyLogger)
+        public GetAllSemanticModels(ILogger<GetAllSemanticModels> logger)
         {
             _logger = logger;
-            _accessKeyLogger = accessKeyLogger;
         }
 
         [Function("GetSemanticModels")]
@@ -30,8 +29,7 @@ namespace PowerBIAutomationApp
                 }
 
                 // Get access token
-                var authProvider = new GetAccessKey(_accessKeyLogger);
-                string accessToken = await authProvider.GetAccessToken();
+                string accessToken = await FBConfigManager.GetAccessToken();
 
                 // Fetch semantic models
                 string modelsJson = await FetchSemanticModelsAsync(workspaceID, accessToken);

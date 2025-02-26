@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Headers;
+using FBFunctionServiceBL.UtilityVault;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
@@ -9,12 +10,10 @@ namespace PowerBIAutomationApp
     public class DeleteReport
     {
         private readonly ILogger<DeleteReport> _logger;
-        private readonly ILogger<GetAccessKey> _accessKeyLogger;
 
-        public DeleteReport(ILogger<DeleteReport> logger, ILogger<GetAccessKey> accessKeyLogger)
+        public DeleteReport(ILogger<DeleteReport> logger)
         {
             _logger = logger;
-            _accessKeyLogger = accessKeyLogger;
         }
 
         [Function("DeleteReport")]
@@ -33,8 +32,7 @@ namespace PowerBIAutomationApp
                 }
 
                 // Get access token
-                var authProvider = new GetAccessKey(_accessKeyLogger);
-                string accessToken = await authProvider.GetAccessToken();
+                string accessToken = await FBConfigManager.GetAccessToken();
 
                 // Attempt to delete the report
                 var result = await DeleteReportById(workspaceID, reportId, accessToken);

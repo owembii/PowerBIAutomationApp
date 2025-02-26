@@ -4,6 +4,7 @@ using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Identity.Client;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
+using FBFunctionServiceBL.UtilityVault;
 
 namespace PowerBIAutomationApp
 {
@@ -23,7 +24,8 @@ namespace PowerBIAutomationApp
 
             try
             {
-                accessToken = await GetAccessToken(); // Call the method to retrieve the access token
+                //accessToken = await GetAccessToken(); // Call the method to retrieve the access token
+                accessToken = await FBConfigManager.GetAccessToken(); // Call the method to retrieve the access token
                 return new OkObjectResult(accessToken);
             }
             catch (Exception)
@@ -34,20 +36,20 @@ namespace PowerBIAutomationApp
         }
 
         // Method to retrieve access token using Azure AD
-        public async Task<string> GetAccessToken()
-        {
-            string authority = $"https://login.microsoftonline.com/{tenantId}/oauth2/v2.0/token";
-            string resource = "https://analysis.windows.net/powerbi/api/.default"; // Power BI API resource
+        //public async Task<string> GetAccessToken()
+        //{
+        //    string authority = $"https://login.microsoftonline.com/{tenantId}/oauth2/v2.0/token";
+        //    string resource = "https://analysis.windows.net/powerbi/api/.default"; // Power BI API resource
 
-            var app = ConfidentialClientApplicationBuilder.Create(clientId)
-                .WithClientSecret(clientSecret)
-                .WithAuthority(new Uri(authority))
-                .Build();
+        //    var app = ConfidentialClientApplicationBuilder.Create(clientId)
+        //        .WithClientSecret(clientSecret)
+        //        .WithAuthority(new Uri(authority))
+        //        .Build();
 
-            var result = await app.AcquireTokenForClient(new[] { resource })
-                                  .ExecuteAsync();
+        //    var result = await app.AcquireTokenForClient(new[] { resource })
+        //                          .ExecuteAsync();
 
-            return result.AccessToken;
-        }
+        //    return result.AccessToken;
+        //}
     }
 }

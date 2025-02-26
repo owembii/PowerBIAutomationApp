@@ -1,6 +1,7 @@
 ﻿using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using FBFunctionServiceBL.UtilityVault;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
@@ -11,13 +12,11 @@ namespace PowerBIAutomationApp
     public class UpdateSemanticModelParameter
     {
         private readonly ILogger<UpdateSemanticModelParameter> _logger;
-        private readonly ILogger<GetAccessKey> _accessKeyLogger;
         private readonly HttpClient _httpClient;
 
-        public UpdateSemanticModelParameter(ILogger<UpdateSemanticModelParameter> logger, ILogger<GetAccessKey> accessKeyLogger)
+        public UpdateSemanticModelParameter(ILogger<UpdateSemanticModelParameter> logger)
         {
             _logger = logger;
-            _accessKeyLogger = accessKeyLogger;
         }
 
         [Function("UpdateSemanticModelParameter")]
@@ -31,8 +30,7 @@ namespace PowerBIAutomationApp
             string accessToken;
             try
             {
-                var authProvider = new GetAccessKey(_accessKeyLogger);
-                accessToken = await authProvider.GetAccessToken();
+                accessToken = await FBConfigManager.GetAccessToken();
             }
             catch (Exception ex)
             {

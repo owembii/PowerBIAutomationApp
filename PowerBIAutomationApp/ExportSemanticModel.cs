@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Headers;
+using FBFunctionServiceBL.UtilityVault;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
@@ -9,14 +10,12 @@ namespace PowerBIAutomationApp
     public class ExportSemanticModel
     {
         private readonly ILogger<ExportSemanticModel> _logger;
-        private readonly ILogger<GetAccessKey> _accessKeyLogger;
         // Local My Documents folder
         private readonly string pbixPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 
-        public ExportSemanticModel(ILogger<ExportSemanticModel> logger, ILogger<GetAccessKey> accessKeyLogger)
+        public ExportSemanticModel(ILogger<ExportSemanticModel> logger)
         {
             _logger = logger;
-            _accessKeyLogger = accessKeyLogger;
         }
 
         [Function("ExportSemanticModel")]
@@ -26,8 +25,7 @@ namespace PowerBIAutomationApp
 
             try
             {
-                var authProvider = new GetAccessKey(_accessKeyLogger);
-                string accessToken = await authProvider.GetAccessToken();
+                string accessToken = await FBConfigManager.GetAccessToken();
 
                 // string? can hold a null value if the parameter is missing
                 string? workspaceId = req.Query["workspaceId"];

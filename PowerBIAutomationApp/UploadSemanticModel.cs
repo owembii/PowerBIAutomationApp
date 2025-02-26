@@ -6,18 +6,17 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using System.Net;
+using FBFunctionServiceBL.UtilityVault;
 
 namespace PowerBIAutomationApp
 {
     public class UploadSemanticModel
     {
         private readonly ILogger<UploadSemanticModel> _logger;
-        private readonly ILogger<GetAccessKey> _accessKeyLogger;
 
-        public UploadSemanticModel(ILogger<UploadSemanticModel> logger, ILogger<GetAccessKey> accessKeyLogger)
+        public UploadSemanticModel(ILogger<UploadSemanticModel> logger)
         {
             _logger = logger;
-            _accessKeyLogger = accessKeyLogger;
         }
 
         [Function("UploadSemanticModel")]
@@ -28,8 +27,7 @@ namespace PowerBIAutomationApp
 
             try
             {
-                var authProvider = new GetAccessKey(_accessKeyLogger);
-                string accessToken = await authProvider.GetAccessToken();
+                string accessToken = await FBConfigManager.GetAccessToken();
 
                 string? targetWorkspaceId = req.Query["targetWorkspaceId"];
                 string? semanticModelName = req.Query["semanticModelName"];

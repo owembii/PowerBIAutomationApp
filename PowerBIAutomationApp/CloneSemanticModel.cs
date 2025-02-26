@@ -6,18 +6,17 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
+using FBFunctionServiceBL.UtilityVault;
 
 namespace PowerBIAutomationApp
 {
     public class CloneSemanticModel
     {
         private readonly ILogger<CloneReport> _logger;
-        private readonly ILogger<GetAccessKey> _accessKeyLogger;
 
-        public CloneSemanticModel(ILogger<CloneReport> logger, ILogger<GetAccessKey> accessKeyLogger)
+        public CloneSemanticModel(ILogger<CloneReport> logger)
         {
             _logger = logger;
-            _accessKeyLogger = accessKeyLogger;
         }
 
         [Function("CloneSemanticModel")]
@@ -31,8 +30,7 @@ namespace PowerBIAutomationApp
 
             try
             {
-                var authProvider = new GetAccessKey(_accessKeyLogger);
-                string accessToken = await authProvider.GetAccessToken();
+                string accessToken = await FBConfigManager.GetAccessToken();
 
                 // Read and deserialize request body
                 string requestBody = await new StreamReader(req.Body).ReadToEndAsync();

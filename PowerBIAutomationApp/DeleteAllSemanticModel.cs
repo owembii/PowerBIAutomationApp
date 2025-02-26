@@ -1,5 +1,6 @@
 ﻿using System.Net.Http.Headers;
 using System.Text.Json;
+using FBFunctionServiceBL.UtilityVault;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
@@ -10,13 +11,11 @@ namespace PowerBIAutomationApp
     public class DeleteAllSemanticModels
     {
         private readonly ILogger<DeleteAllSemanticModels> _logger;
-        private readonly ILogger<GetAccessKey> _accessKeyLogger;
         private readonly HttpClient _httpClient;
 
-        public DeleteAllSemanticModels(ILogger<DeleteAllSemanticModels> logger, ILogger<GetAccessKey> accessKeyLogger, HttpClient httpClient)
+        public DeleteAllSemanticModels(ILogger<DeleteAllSemanticModels> logger, HttpClient httpClient)
         {
             _logger = logger;
-            _accessKeyLogger = accessKeyLogger;
             _httpClient = httpClient;
         }
 
@@ -31,8 +30,7 @@ namespace PowerBIAutomationApp
             string accessToken;
             try
             {
-                var authProvider = new GetAccessKey(_accessKeyLogger);
-                accessToken = await authProvider.GetAccessToken();
+                accessToken = await FBConfigManager.GetAccessToken();
             }
             catch (Exception ex)
             {

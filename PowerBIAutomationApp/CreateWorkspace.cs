@@ -2,6 +2,7 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using FBFunctionServiceBL.UtilityVault;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
@@ -12,13 +13,11 @@ namespace PowerBIAutomationApp
     public class Workspace
     {
         private readonly ILogger<Workspace> _logger;
-        private readonly ILogger<GetAccessKey> _accessKeyLogger;
         private static readonly string baseUrl = "https://api.powerbi.com/v1.0/myorg/groups";
 
-        public Workspace(ILogger<Workspace> logger, ILogger<GetAccessKey> accessKeyLogger)
+        public Workspace(ILogger<Workspace> logger)
         {
             _logger = logger;
-            _accessKeyLogger = accessKeyLogger;
         }
 
         [Function("CreatePowerBIWorkspace")]
@@ -37,8 +36,7 @@ namespace PowerBIAutomationApp
             string accessToken;
             try
             {
-                var authProvider = new GetAccessKey(_accessKeyLogger);
-                accessToken = await authProvider.GetAccessToken();
+                accessToken = await FBConfigManager.GetAccessToken();
             }
             catch (Exception ex)
             {
@@ -102,8 +100,7 @@ namespace PowerBIAutomationApp
             string accessToken;
             try
             {
-                var authProvider = new GetAccessKey(_accessKeyLogger);
-                accessToken = await authProvider.GetAccessToken();
+                accessToken = await FBConfigManager.GetAccessToken();
             }
             catch (Exception ex)
             {
@@ -191,8 +188,7 @@ namespace PowerBIAutomationApp
             string accessToken;
             try
             {
-                var authProvider = new GetAccessKey(_accessKeyLogger);
-                accessToken = await authProvider.GetAccessToken();
+                accessToken = await FBConfigManager.GetAccessToken();
             }
             catch (Exception ex)
             {
