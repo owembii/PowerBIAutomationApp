@@ -8,8 +8,6 @@ var builder = FunctionsApplication.CreateBuilder(args);
 builder.ConfigureFunctionsWebApplication();
 
 // Register dependencies
-builder.Services.AddSingleton<GetAccessKey>();
-builder.Services.AddSingleton<CloneReport>();
 builder.Services.AddHttpClient();
 
 

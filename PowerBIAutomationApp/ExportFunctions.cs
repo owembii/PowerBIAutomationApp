@@ -1,25 +1,25 @@
 ﻿using System.Net.Http.Headers;
-using FBFunctionServiceBL.UtilityVault;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
+using PowerBIAutomationApp.Utilities;
 
 namespace PowerBIAutomationApp
 {
-    public class ExportSemanticModel
+    public class ExportFunctions
     {
-        private readonly ILogger<ExportSemanticModel> _logger;
+        private readonly ILogger<ExportFunctions> _logger;
         // Local My Documents folder
         private readonly string pbixPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 
-        public ExportSemanticModel(ILogger<ExportSemanticModel> logger)
+        public ExportFunctions(ILogger<ExportFunctions> logger)
         {
             _logger = logger;
         }
 
         [Function("ExportSemanticModel")]
-        public async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "get")] HttpRequest req)
+        public async Task<IActionResult> ExportSemanticModel([HttpTrigger(AuthorizationLevel.Function, "get")] HttpRequest req)
         {
             _logger.LogInformation("Processing export semantic model request.");
 

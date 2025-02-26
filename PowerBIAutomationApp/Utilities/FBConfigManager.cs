@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FBFunctionServiceBL.UtilityVault
+namespace PowerBIAutomationApp.Utilities
 {
     public static class FBConfigManager
     {
@@ -78,20 +78,20 @@ namespace FBFunctionServiceBL.UtilityVault
             {
                 throw;
             }
-            
+
             return strAcessToken;
         }
         public static string Encryption(string strText)
         {
             string strDecryptText = string.Empty;
-            FigBytesUtility.Core.Utility utility = new FigBytesUtility.Core.Utility(strVaultURL, strVaultAppReaderName);
+            Utility utility = new Utility(strVaultURL, strVaultAppReaderName);
             strDecryptText = utility.Encryption(strText);
             return strDecryptText;
         }
         public static string Decryption(string strText)
         {
             string strDecryptText = string.Empty;
-            FigBytesUtility.Core.Utility utility = new FigBytesUtility.Core.Utility(strVaultURL, strVaultAppReaderName);
+            Utility utility = new Utility(strVaultURL, strVaultAppReaderName);
             strDecryptText = utility.Decryption(strText);
             return strDecryptText;
         }

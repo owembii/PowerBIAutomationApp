@@ -2,27 +2,28 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using FBFunctionServiceBL.UtilityVault;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 using PowerBIAutomationApp.DTO;
+using PowerBIAutomationApp.Utilities;
 
 namespace PowerBIAutomationApp
 {
-    public class Workspace
+    public class CreateFunctions
     {
-        private readonly ILogger<Workspace> _logger;
+        private readonly ILogger<CreateFunctions> _logger;
         private static readonly string baseUrl = "https://api.powerbi.com/v1.0/myorg/groups";
 
-        public Workspace(ILogger<Workspace> logger)
+        public CreateFunctions(ILogger<CreateFunctions> logger)
         {
             _logger = logger;
         }
 
         [Function("CreatePowerBIWorkspace")]
-        public async Task<HttpResponseData> CreateWorkspace(
-            [HttpTrigger(AuthorizationLevel.Function, "post", Route = "workspace/create")] HttpRequestData req)
+        public async Task<HttpResponseData> CreateWorkspace([
+            HttpTrigger(AuthorizationLevel.Function, "post", 
+            Route = "workspace/create")] HttpRequestData req)
         {
             _logger.LogInformation("Creating Power BI workspace...");
             var requestBody = await JsonSerializer.DeserializeAsync<CreateWorkspaceDTO>(req.Body);
@@ -67,33 +68,10 @@ namespace PowerBIAutomationApp
             return response;
         }
 
-        //private static async Task<string> GetAccessTokenAsync()
-        //{
-        //    string tokenUrl = $"https://login.microsoftonline.com/{tenantId}/oauth2/v2.0/token";
-        //    var data = new Dictionary<string, string>
-        //    {
-        //        { "grant_type", "client_credentials" },
-        //        { "scope", "https://analysis.windows.net/powerbi/api/.default" },
-        //        { "client_id", clientId },
-        //        { "client_secret", clientSecret }
-        //    };
-
-        //    using var content = new FormUrlEncodedContent(data);
-        //    HttpResponseMessage response = await _httpClient.PostAsync(tokenUrl, content);
-        //    string responseJson = await response.Content.ReadAsStringAsync();
-
-        //    if (!response.IsSuccessStatusCode)
-        //    {
-        //        throw new Exception($"Failed to retrieve token: {responseJson}");
-        //    }
-
-        //    var tokenObj = JsonSerializer.Deserialize<TokenResponse>(responseJson);
-        //    return tokenObj?.AccessToken ?? throw new Exception("Access token not found in response.");
-        //}
-
         [Function("GetAllPowerBIWorkspaces")]
-        public async Task<HttpResponseData> GetAllWorkspaces(
-            [HttpTrigger(AuthorizationLevel.Function, "get", Route = "workspaces/all")] HttpRequestData req)
+        public async Task<HttpResponseData> GetAllWorkspaces([
+            HttpTrigger(AuthorizationLevel.Function, "get", 
+            Route = "workspaces/all")] HttpRequestData req)
         {
             _logger.LogInformation("Retrieving all Power BI workspaces...");
 
@@ -172,8 +150,9 @@ namespace PowerBIAutomationApp
         }
 
         [Function("AddUserToPowerBIWorkspace")]
-        public async Task<HttpResponseData> AddUser(
-            [HttpTrigger(AuthorizationLevel.Function, "post", Route = "workspace/{workspaceId}/addUser")] HttpRequestData req,
+        public async Task<HttpResponseData> AddUser([
+            HttpTrigger(AuthorizationLevel.Function, "post", 
+            Route = "workspace/{workspaceId}/addUser")] HttpRequestData req,
             string workspaceId)
         {
             _logger.LogInformation($"Adding user to Power BI workspace: {workspaceId}");
