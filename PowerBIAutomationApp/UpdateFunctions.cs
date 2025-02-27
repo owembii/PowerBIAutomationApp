@@ -22,6 +22,8 @@ namespace PowerBIAutomationApp
             _httpClient = httpClient;
         }
 
+
+        
         [Function("UpdateParameters")]
         public async Task<IActionResult> UpdateParameters([
             HttpTrigger(AuthorizationLevel.Function, "get",

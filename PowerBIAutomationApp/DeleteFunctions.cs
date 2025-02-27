@@ -284,8 +284,5 @@ namespace PowerBIAutomationApp
             }
         }
 
-       
-
-
     }
 }
