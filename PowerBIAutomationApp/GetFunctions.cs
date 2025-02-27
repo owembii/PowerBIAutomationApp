@@ -236,7 +236,7 @@ namespace PowerBIAutomationApp
             }
         }
 
-        private async Task<string> FindReportIdByName(string workspaceId, string reportName, string accessToken)
+        public async Task<string> FindReportIdByName(string workspaceId, string reportName, string accessToken)
         {
             using (HttpClient client = new HttpClient())
             {
