@@ -160,68 +160,6 @@ namespace PowerBIAutomationApp
             }
         }
 
-        //[Function("CloneSemanticModel")]
-        //public async Task<IActionResult> CloneSemanticModel([
-        //    HttpTrigger(AuthorizationLevel.Function, "post",
-        //    Route = "workspaces/{sourceWorkspaceId}/reports/{reportId}/clone-semantic-model")] HttpRequest req,
-        //    string sourceWorkspaceId,
-        //    string reportId)
-        //{
-        //    _logger.LogInformation("Processing clone sematnic model request.");
-
-        //    try
-        //    {
-        //        string accessToken = await FBConfigManager.GetAccessToken();
-
-        //        // Read and deserialize request body
-        //        string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-        //        var cloneRequest = new CloneReportDTO();
-
-        //        // Only deserialize when request body is not null or empty
-        //        if (!string.IsNullOrWhiteSpace(requestBody))
-        //        {
-        //            cloneRequest = JsonSerializer.Deserialize<CloneReportDTO>(requestBody, new JsonSerializerOptions
-        //            {
-        //                PropertyNameCaseInsensitive = true
-        //            });
-        //        }
-
-        //        // Clone the report
-        //        string newReportID = await CloneReportAsync(
-        //            sourceWorkspaceId,
-        //            reportId,
-        //            cloneRequest?.name,
-        //            cloneRequest?.targetWorkspaceId,
-        //            cloneRequest?.targetModelId,
-        //            accessToken);
-
-        //        string reportWorkspaceId = sourceWorkspaceId;
-
-        //        if (!string.IsNullOrWhiteSpace(cloneRequest?.targetWorkspaceId))
-        //        {
-        //            reportWorkspaceId = cloneRequest.targetWorkspaceId;
-        //        }
-
-        //        // Delete the generated report
-        //        var deletedReportID = await _deleteFunctions.DeleteReportById(
-        //            reportWorkspaceId, 
-        //            newReportID, 
-        //            accessToken);
-
-        //        _logger.LogInformation($"Successfully cloned semantic model. Deleted auto-generated report ID: {deletedReportID}");
-
-        //        return new OkObjectResult(new { DeletedReportId = deletedReportID });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError($"An error occurred while cloning the semantic model: {ex}");
-        //        return new ObjectResult(new { Error = "Internal Server Error", Details = ex.Message })
-        //        {
-        //            StatusCode = StatusCodes.Status500InternalServerError
-        //        };
-        //    }
-        //}
-
         [Function("CloneSemanticModel")]
         public async Task<IActionResult> CloneSemanticModel([
             HttpTrigger(AuthorizationLevel.Function, "post",
@@ -250,6 +188,7 @@ namespace PowerBIAutomationApp
                     return new BadRequestObjectResult("sourceWorkspaceId, modelReportId, modelName, and targetWorkspaceId must be provided and cannot be null or empty.");
                 }
 
+                // Export semantic model
                 string? modelPath = await _exportFunctions.ExportSemanticModelAsync(
                     sourceWorkspaceId,
                     reportId,
@@ -260,6 +199,10 @@ namespace PowerBIAutomationApp
                     cloneRequest.modelName,
                     modelPath,
                     accessToken));
+
+                //_logger.LogInformation($"Successfully cloned semantic model. Deleted auto-generated report ID: {deletedReportID}");
+
+                //return new OkObjectResult(new { DeletedReportId = deletedReportID });
 
             }
             catch (Exception ex)
