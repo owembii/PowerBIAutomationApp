@@ -19,7 +19,11 @@ namespace PowerBIAutomationApp
         }
 
         [Function("ExportSemanticModel")]
-        public async Task<IActionResult> ExportSemanticModel([HttpTrigger(AuthorizationLevel.Function, "get")] HttpRequest req)
+        public async Task<IActionResult> ExportSemanticModel([
+            HttpTrigger(AuthorizationLevel.Function, "get",
+            Route = "workspaces/{sourceWorkspaceId}/reports/{reportId}/export-semantic-model")] HttpRequest req,
+            string sourceWorkspaceId,
+            string reportId)
         {
             _logger.LogInformation("Processing export semantic model request.");
 
@@ -27,20 +31,16 @@ namespace PowerBIAutomationApp
             {
                 string accessToken = await FBConfigManager.GetAccessToken();
 
-                // string? can hold a null value if the parameter is missing
-                string? workspaceId = req.Query["workspaceId"];
-                string? modelReportId = req.Query["modelReportId"];
-
                 // Validate that workspaceId and modelReportId are not null or empty
-                if (string.IsNullOrEmpty(workspaceId) || string.IsNullOrEmpty(modelReportId))
+                if (string.IsNullOrEmpty(sourceWorkspaceId) || string.IsNullOrEmpty(reportId))
                 {
                     return new BadRequestObjectResult("workspaceId and modelReportId must be provided and cannot be null or empty.");
                 }
 
                 // Export semantic model
                 string? exportSemanticModel = await ExportSemanticModelAsync(
-                    workspaceId,
-                    modelReportId,
+                    sourceWorkspaceId,
+                    reportId,
                     accessToken);
 
                 // Return exported file path
