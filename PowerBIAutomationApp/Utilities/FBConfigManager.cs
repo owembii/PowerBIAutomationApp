@@ -14,6 +14,7 @@ namespace PowerBIAutomationApp.Utilities
         static FBConfigurationManager _fBConfigurationManager;
         private static readonly string strVaultAppReaderName;
 
+
         static FBConfigManager()
         {
             strVaultURL = Environment.GetEnvironmentVariable("AzureKeyVaultURL");

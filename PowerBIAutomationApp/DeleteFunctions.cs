@@ -14,6 +14,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 
+
+
 namespace PowerBIAutomationApp
 {
     public class DeleteFunctions
@@ -230,5 +232,60 @@ namespace PowerBIAutomationApp
             await errorResponse.WriteStringAsync($"{message} Details: {ex.Message}");
             return errorResponse;
         }
+
+        [Function("DeleteWorkspace")]
+        public async Task<HttpResponseData> DeleteWorkspace(
+           [HttpTrigger(AuthorizationLevel.Function, "delete", Route = "workspaces/{workspaceId}/delete")] HttpRequestData req,
+           string workspaceId)
+        {
+            _logger.LogInformation($"Attempting to delete workspace: {workspaceId}");
+
+            // Get Access Token
+            string accessToken;
+            try
+            {
+                accessToken = await FBConfigManager.GetAccessToken();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error retrieving access token: {ex.Message}");
+                return await CreateErrorResponse(req, "Failed to retrieve access token.", ex);
+            }
+
+            try
+            {
+                // Power BI API URL for deleting a workspace
+                string deleteUrl = $"https://api.powerbi.com/v1.0/myorg/groups/{workspaceId}";
+
+                // Add Authorization Header
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+                // Send DELETE Request
+                HttpResponseMessage response = await _httpClient.DeleteAsync(deleteUrl);
+                string responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogError($"Failed to delete workspace {workspaceId}: {responseContent}");
+                    return await CreateErrorResponse(req, $"Failed to delete workspace {workspaceId}.", new Exception(responseContent));
+                }
+
+                _logger.LogInformation($"Successfully deleted workspace {workspaceId}");
+
+                // Success Response
+                var successResponse = req.CreateResponse(System.Net.HttpStatusCode.OK);
+                await successResponse.WriteStringAsync($"Workspace {workspaceId} deleted successfully.");
+                return successResponse;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error deleting workspace: {ex.Message}");
+                throw;
+            }
+        }
+
+       
+
+
     }
 }

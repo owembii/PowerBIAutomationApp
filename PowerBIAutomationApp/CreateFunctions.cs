@@ -34,6 +34,8 @@ namespace PowerBIAutomationApp
                 return errorResponse;
             }
 
+
+           
             string accessToken;
             try
             {
@@ -108,7 +110,8 @@ namespace PowerBIAutomationApp
             await response.WriteStringAsync(workspacesResponse);
             return response;
         }
-
+       
+        
         private static async Task<string> GetAllWorkspacesAsync(string accessToken)
         {
             using (HttpClient client = new HttpClient())
