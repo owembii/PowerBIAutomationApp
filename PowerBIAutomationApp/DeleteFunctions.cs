@@ -141,7 +141,7 @@ namespace PowerBIAutomationApp
             }
         }
 
-        private async Task<IActionResult> DeleteReportById(string workspaceID, string reportID, string accessToken)
+        public async Task<IActionResult> DeleteReportById(string workspaceID, string reportID, string accessToken)
         {
             using (HttpClient client = new HttpClient())
             {
