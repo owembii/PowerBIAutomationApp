@@ -5,6 +5,7 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using System.Net.Http.Headers;
 using PowerBIAutomationApp.Utilities;
+using System.Text.Json;
 
 namespace PowerBIAutomationApp
 {
@@ -40,8 +41,8 @@ namespace PowerBIAutomationApp
 
         [Function("GetAllReports")]
         public async Task<IActionResult> GetAllReports([
-            HttpTrigger(AuthorizationLevel.Function, "get", 
-            Route = "workspaces/{workspaceID}/reports")] HttpRequest req, 
+            HttpTrigger(AuthorizationLevel.Function, "get",
+            Route = "workspaces/{workspaceID}/reports")] HttpRequest req,
             string workspaceID)
         {
             _logger.LogInformation($"Fetching reports for workspace: {workspaceID}");
@@ -92,8 +93,8 @@ namespace PowerBIAutomationApp
         }
 
         [Function("GetSemanticModels")]
-        public async Task<IActionResult> GetSemanticModels([HttpTrigger(AuthorizationLevel.Function, "get", 
-            Route = "workspaces/{workspaceID}/semanticmodels")] HttpRequest req, 
+        public async Task<IActionResult> GetSemanticModels([HttpTrigger(AuthorizationLevel.Function, "get",
+            Route = "workspaces/{workspaceID}/semanticmodels")] HttpRequest req,
             string workspaceID)
         {
             _logger.LogInformation($"Fetching semantic models for workspace: {workspaceID}");
@@ -145,9 +146,9 @@ namespace PowerBIAutomationApp
 
         [Function("GetSemanticModelParameterValue")]
         public async Task<HttpResponseData> GetSemanticModelParameterValue([
-            HttpTrigger(AuthorizationLevel.Function, "get", 
+            HttpTrigger(AuthorizationLevel.Function, "get",
             Route = "workspace/{workspaceId}/semanticmodel/{modelId}/parameters")] HttpRequestData req,
-           string workspaceId, 
+           string workspaceId,
            string modelId)
         {
             _logger.LogInformation($"Retrieving parameters for semantic model {modelId} in workspace {workspaceId}...");
@@ -194,6 +195,81 @@ namespace PowerBIAutomationApp
                 await errorResponse.WriteStringAsync($"Error retrieving semantic model parameters: {ex.Message}");
                 return errorResponse;
             }
+
+
+        }
+
+
+        [Function("GetReportId")]
+        public async Task<IActionResult> GetReportId(
+                [HttpTrigger(AuthorizationLevel.Function, "get", Route = "workspaces/{workspaceId}/reports/{reportName}")] HttpRequest req,
+                string workspaceId,
+                string reportName)
+        {
+            _logger.LogInformation($"Searching for report: {reportName} in workspace: {workspaceId}");
+
+            try
+            {
+                // Step 1: Get Power BI Access Token
+                string accessToken = await FBConfigManager.GetAccessToken();
+
+                // Step 2: Find the report ID by its name
+                string reportId = await FindReportIdByName(workspaceId, reportName, accessToken);
+
+                if (!string.IsNullOrEmpty(reportId))
+                {
+                    _logger.LogInformation($"Found Report: {reportName}, Report ID: {reportId}");
+                    return new OkObjectResult(new { ReportId = reportId });
+                }
+                else
+                {
+                    return new NotFoundObjectResult(new { Error = "Report not found" });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error finding report: {ex.Message}");
+                return new ObjectResult(new { Error = "Internal Server Error", Details = ex.Message })
+                {
+                    StatusCode = StatusCodes.Status500InternalServerError
+                };
+            }
+        }
+
+        private async Task<string> FindReportIdByName(string workspaceId, string reportName, string accessToken)
+        {
+            using (HttpClient client = new HttpClient())
+            {
+                string reportsUrl = $"https://api.powerbi.com/v1.0/myorg/groups/{workspaceId}/reports";
+
+                // Set Authorization Header
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+                HttpResponseMessage response = await client.GetAsync(reportsUrl);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    string errorResponse = await response.Content.ReadAsStringAsync();
+                    throw new Exception($"Failed to retrieve reports: {errorResponse}");
+                }
+
+                var jsonBody = await response.Content.ReadAsStringAsync();
+                using (JsonDocument doc = JsonDocument.Parse(jsonBody))
+                {
+                    foreach (var report in doc.RootElement.GetProperty("value").EnumerateArray())
+                    {
+                        if (report.TryGetProperty("name", out JsonElement nameElement) && nameElement.GetString() == reportName)
+                        {
+                            // If a match is found, return the report ID
+                            return report.GetProperty("id").GetString();
+                        }
+                    }
+                }
+
+                return null; // Return null if no report found with the given name
+            }
+
         }
     }
 }
