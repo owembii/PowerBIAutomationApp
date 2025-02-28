@@ -108,19 +108,7 @@ namespace PowerBIAutomationApp
                                 _logger.LogError($"Failed to upload model. Status Code: {response.StatusCode}, Response: {errorResponse}");
                             }
 
-                            //return response.StatusCode.ToString();
-                            var jsonBody = await response.Content.ReadAsStringAsync();
-                            using (JsonDocument doc = JsonDocument.Parse(jsonBody))
-                            {
-                                if (doc.RootElement.TryGetProperty("id", out JsonElement idElement))
-                                {
-                                    return idElement.GetString() ?? throw new Exception("Failed to retrieve uploaded report ID.");
-                                }
-                                else
-                                {
-                                    throw new Exception("Response JSON does not contain 'id'.");
-                                }
-                            }
+                            return response.StatusCode.ToString();
                         }
                     }
                 }
