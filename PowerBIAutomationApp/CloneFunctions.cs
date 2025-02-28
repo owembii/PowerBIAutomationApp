@@ -17,13 +17,11 @@ namespace PowerBIAutomationApp
     public class CloneFunctions
     {
         private readonly ILogger<CloneFunctions> _logger;
-        private DeleteFunctions _deleteFunctions;
         private ExportFunctions _exportFunctions;
         private UploadFunctions _uploadFunctions;
-        public CloneFunctions(ILogger<CloneFunctions> logger, DeleteFunctions deleteFunctions, ExportFunctions exportFunctions, UploadFunctions uploadFunctions)
+        public CloneFunctions(ILogger<CloneFunctions> logger, ExportFunctions exportFunctions, UploadFunctions uploadFunctions)
         {
             _logger = logger;
-            _deleteFunctions = deleteFunctions;
             _exportFunctions = exportFunctions;
             _uploadFunctions = uploadFunctions;
         }
@@ -194,15 +192,12 @@ namespace PowerBIAutomationApp
                     reportId,
                     accessToken);
 
+                // Upload semantic model; excluding the report
                 return new OkObjectResult(await _uploadFunctions.UploadSemanticModelAsync(
                     cloneRequest.targetWorkspaceId,
                     cloneRequest.modelName,
                     modelPath,
                     accessToken));
-
-                //_logger.LogInformation($"Successfully cloned semantic model. Deleted auto-generated report ID: {deletedReportID}");
-
-                //return new OkObjectResult(new { DeletedReportId = deletedReportID });
 
             }
             catch (Exception ex)
