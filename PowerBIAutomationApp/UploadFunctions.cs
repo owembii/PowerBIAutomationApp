@@ -26,9 +26,8 @@ namespace PowerBIAutomationApp
         [Function("UploadSemanticModel")]
         public async Task<IActionResult> UploadSemanticModel([
             HttpTrigger(AuthorizationLevel.Function, "post",
-            Route = "workspaces/{targetWorkspaceId}/modelName/{semanticModelName}/upload-semantic-model")] HttpRequest req,
-            string targetWorkspaceId,
-            string semanticModelName)
+            Route = "workspaces/{targetWorkspaceId}/upload-semantic-model")] HttpRequest req,
+            string targetWorkspaceId)
         {
             _logger.LogInformation("Processing upload semantic model request.");
 
@@ -44,7 +43,7 @@ namespace PowerBIAutomationApp
 
                 // Validate that targetWorkspaceId, semanticModelName, and semanticModelPath are not null or empty
                 if (string.IsNullOrEmpty(targetWorkspaceId) ||
-                   string.IsNullOrEmpty(semanticModelName) ||
+                   string.IsNullOrEmpty(uploadRequest?.name) ||
                    string.IsNullOrEmpty(uploadRequest?.semanticModelPath))
                 {
                     return new BadRequestObjectResult("targetWorkspaceId, semanticModelName, and semanticModelPath must be provided and cannot be null or empty.");
@@ -53,7 +52,7 @@ namespace PowerBIAutomationApp
                 // Upload semantic model
                 string? uploadSemanticModel = await UploadSemanticModelAsync(
                     targetWorkspaceId,
-                    semanticModelName,
+                    uploadRequest.name,
                     uploadRequest.semanticModelPath,
                     accessToken);
 
@@ -74,7 +73,7 @@ namespace PowerBIAutomationApp
             string semanticModelPath,
             string accessToken)
         {
-            string uploadSemanticUrl = $"https://api.powerbi.com/v1.0/myorg/groups/{targetWorkspaceId}/imports?datasetDisplayName={semanticModelName}";
+            string uploadSemanticUrl = $"https://api.powerbi.com/v1.0/myorg/groups/{targetWorkspaceId}/imports?datasetDisplayName={semanticModelName}&skipReport=true";
 
             using (var client = new HttpClient())
             {
