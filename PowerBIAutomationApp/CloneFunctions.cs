@@ -29,8 +29,8 @@ namespace PowerBIAutomationApp
         [Function("CloneReport")]
         public async Task<IActionResult> CloneReport([
             HttpTrigger(AuthorizationLevel.Function, "post",
-            Route = "workspaces/{sourceWorkspaceId}/reports/{reportId}/clone-report")] HttpRequest req,
-            string sourceWorkspaceId,
+            Route = "workspaces/{workspaceId}/reports/{reportId}/clone-report")] HttpRequest req,
+            string workspaceId,
             string reportId)
         {
             _logger.LogInformation("Processing clone report request.");
@@ -54,11 +54,11 @@ namespace PowerBIAutomationApp
 
                 // Clone the report
                 string newReportID = await CloneReportAsync(
-                    sourceWorkspaceId,
+                    workspaceId,
                     reportId,
-                    cloneRequest?.name,
+                    cloneRequest?.reportName,
                     cloneRequest?.targetWorkspaceId,
-                    cloneRequest?.targetModelId,
+                    cloneRequest?.targetSemanticModelId,
                     accessToken);
 
                 _logger.LogInformation($"Successfully cloned report. New Report ID: {newReportID}");
@@ -75,7 +75,10 @@ namespace PowerBIAutomationApp
             }
         }
 
-        private async Task<string> GetOriginalReportName(string workspaceId, string reportId, string accessToken)
+        private async Task<string> GetOriginalReportName(
+            string workspaceId, 
+            string reportId, 
+            string accessToken)
         {
             using (HttpClient client = new HttpClient())
             {
@@ -105,16 +108,16 @@ namespace PowerBIAutomationApp
         }
 
         private async Task<string> CloneReportAsync(
-            string sourceWorkspaceId,
+            string workspaceId,
             string reportId,
             string? reportName,
             string? targetWorkspaceId,
-            string? targetModelId,
+            string? targetSemanticModelId,
             string accessToken)
         {
             using (HttpClient client = new HttpClient())
             {
-                string cloneUrl = $"https://api.powerbi.com/v1.0/myorg/groups/{sourceWorkspaceId}/reports/{reportId}/Clone";
+                string cloneUrl = $"https://api.powerbi.com/v1.0/myorg/groups/{workspaceId}/reports/{reportId}/Clone";
 
                 // Set Authorization Header
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
@@ -124,14 +127,14 @@ namespace PowerBIAutomationApp
                 if (string.IsNullOrWhiteSpace(reportName))
                 {
                     _logger.LogInformation("No report name provided. Retrieving current report name.");
-                    reportName = await GetOriginalReportName(sourceWorkspaceId, reportId, accessToken);
+                    reportName = await GetOriginalReportName(workspaceId, reportId, accessToken);
                 }
 
                 var requestBody = new
                 {
                     name = reportName,
                     targetWorkspaceId,
-                    targetModelId
+                    targetModelId = targetSemanticModelId
                 };
 
                 var jsonContent = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
@@ -161,8 +164,8 @@ namespace PowerBIAutomationApp
         [Function("CloneSemanticModel")]
         public async Task<IActionResult> CloneSemanticModel([
             HttpTrigger(AuthorizationLevel.Function, "post",
-            Route = "workspaces/{sourceWorkspaceId}/reports/{reportId}/clone-semantic-model")] HttpRequest req,
-            string sourceWorkspaceId,
+            Route = "workspaces/{workspaceId}/reports/{reportId}/clone-semantic-model")] HttpRequest req,
+            string workspaceId,
             string reportId)
         {
             _logger.LogInformation("Processing cloning semantic model request.");
@@ -177,26 +180,26 @@ namespace PowerBIAutomationApp
                     PropertyNameCaseInsensitive = true
                 });
 
-                // Validate that sourceWorkspaceId, modelReportId, modelName, and targetWorkspaceId are not null or empty
-                if (string.IsNullOrEmpty(sourceWorkspaceId) ||
+                // Validate that workspaceId, reportId, semanticModelName, and targetWorkspaceId are not null or empty
+                if (string.IsNullOrEmpty(workspaceId) ||
                    string.IsNullOrEmpty(reportId) ||
-                   string.IsNullOrEmpty(cloneRequest?.modelName) ||
+                   string.IsNullOrEmpty(cloneRequest?.semanticModelName) ||
                    string.IsNullOrEmpty(cloneRequest?.targetWorkspaceId))
                 {
-                    return new BadRequestObjectResult("sourceWorkspaceId, modelReportId, modelName, and targetWorkspaceId must be provided and cannot be null or empty.");
+                    return new BadRequestObjectResult("workspaceId, reportId, semanticModelName, and targetWorkspaceId must be provided and cannot be null or empty.");
                 }
 
                 // Export semantic model
-                string? modelPath = await _exportFunctions.ExportSemanticModelAsync(
-                    sourceWorkspaceId,
+                string? semanticModelPath = await _exportFunctions.ExportSemanticModelAsync(
+                    workspaceId,
                     reportId,
                     accessToken);
 
                 // Upload semantic model; excluding the report
                 return new OkObjectResult(await _uploadFunctions.UploadSemanticModelAsync(
                     cloneRequest.targetWorkspaceId,
-                    cloneRequest.modelName,
-                    modelPath,
+                    cloneRequest.semanticModelName,
+                    semanticModelPath,
                     accessToken));
 
             }

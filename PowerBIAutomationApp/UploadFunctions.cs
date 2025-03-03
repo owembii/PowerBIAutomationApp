@@ -26,8 +26,8 @@ namespace PowerBIAutomationApp
         [Function("UploadSemanticModel")]
         public async Task<IActionResult> UploadSemanticModel([
             HttpTrigger(AuthorizationLevel.Function, "post",
-            Route = "workspaces/{targetWorkspaceId}/upload-semantic-model")] HttpRequest req,
-            string targetWorkspaceId)
+            Route = "workspaces/{workspaceId}/upload-semantic-model")] HttpRequest req,
+            string workspaceId)
         {
             _logger.LogInformation("Processing upload semantic model request.");
 
@@ -42,7 +42,7 @@ namespace PowerBIAutomationApp
                 });
 
                 // Validate that targetWorkspaceId, semanticModelName, and semanticModelPath are not null or empty
-                if (string.IsNullOrEmpty(targetWorkspaceId) ||
+                if (string.IsNullOrEmpty(workspaceId) ||
                    string.IsNullOrEmpty(uploadRequest?.name) ||
                    string.IsNullOrEmpty(uploadRequest?.semanticModelPath))
                 {
@@ -51,7 +51,7 @@ namespace PowerBIAutomationApp
 
                 // Upload semantic model
                 string? uploadSemanticModel = await UploadSemanticModelAsync(
-                    targetWorkspaceId,
+                    workspaceId,
                     uploadRequest.name,
                     uploadRequest.semanticModelPath,
                     accessToken);
@@ -68,12 +68,12 @@ namespace PowerBIAutomationApp
         }
 
         public async Task<string?> UploadSemanticModelAsync(
-            string targetWorkspaceId,
+            string workspaceId,
             string semanticModelName,
             string semanticModelPath,
             string accessToken)
         {
-            string uploadSemanticUrl = $"https://api.powerbi.com/v1.0/myorg/groups/{targetWorkspaceId}/imports?datasetDisplayName={semanticModelName}&skipReport=true";
+            string uploadSemanticUrl = $"https://api.powerbi.com/v1.0/myorg/groups/{workspaceId}/imports?datasetDisplayName={semanticModelName}&skipReport=true";
 
             using (var client = new HttpClient())
             {

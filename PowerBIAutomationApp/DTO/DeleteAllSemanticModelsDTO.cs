@@ -1,11 +1,11 @@
 ﻿namespace PowerBIAutomationApp.DTO
 {
-    public class SemanticModelListResponse
+    public class SemanticModelListDTO
     {
-        public List<SemanticModel> Value { get; set; } = new();
+        public List<SemanticModelDTO> Value { get; set; } = new();
     }
 
-    public class SemanticModel
+    public class SemanticModelDTO
     {
         public string Id { get; set; }
     }

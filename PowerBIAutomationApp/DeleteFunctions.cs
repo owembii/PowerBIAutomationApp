@@ -32,7 +32,7 @@ namespace PowerBIAutomationApp
         [Function("DeleteAllSemanticModels")]
         public async Task<HttpResponseData> DeleteAllSemanticModels([
             HttpTrigger(AuthorizationLevel.Function, "delete",
-            Route = "workspace/{workspaceId}/semanticmodels/delete")] HttpRequestData req,
+            Route = "workspaces/{workspaceId}/semanticmodels/delete-all")] HttpRequestData req,
             string workspaceId)
         {
             _logger.LogInformation($"Deleting all semantic models in workspace: {workspaceId}");
@@ -67,11 +67,11 @@ namespace PowerBIAutomationApp
 
                 // PARSING JSON RESPONSE
                 var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                var responseObj = JsonSerializer.Deserialize<SemanticModelListResponse>(responseJson, options);
-                var models = responseObj?.Value ?? new List<SemanticModel>();
+                var responseObj = JsonSerializer.Deserialize<SemanticModelListDTO>(responseJson, options);
+                var semanticModels = responseObj?.Value ?? new List<SemanticModelDTO>();
 
                 // NO MODELS FOUND HANDLER
-                if (models.Count == 0)
+                if (semanticModels.Count == 0)
                 {
                     _logger.LogWarning($"No semantic models found in workspace: {workspaceId}");
                     var noModelsResponse = req.CreateResponse(System.Net.HttpStatusCode.OK);
@@ -80,7 +80,7 @@ namespace PowerBIAutomationApp
                 }
 
                 // LOOPS THROUGH DELETING EACH SEMANTIC MODEL
-                foreach (var model in models)
+                foreach (var model in semanticModels)
                 {
                     string deleteUrl = $"https://api.powerbi.com/v1.0/myorg/groups/{workspaceId}/datasets/{model.Id}";
                     _logger.LogInformation($"Deleting Dataset ID: {model.Id}");
@@ -113,15 +113,16 @@ namespace PowerBIAutomationApp
 
         [Function("DeleteReport")]
         public async Task<IActionResult> DeleteReport([
-            HttpTrigger(AuthorizationLevel.Function, "delete", Route = "workspaces/{workspaceID}/reports/{reportID}")] HttpRequest req,
-            string workspaceID,
+            HttpTrigger(AuthorizationLevel.Function, "delete", 
+            Route = "workspaces/{workspaceId}/reports/{reportId}")] HttpRequest req,
+            string workspaceId,
             string reportId)
         {
-            _logger.LogInformation($"Attempting to delete report '{reportId}' in workspace: {workspaceID}");
+            _logger.LogInformation($"Attempting to delete report '{reportId}' in workspace: {workspaceId}");
 
             try
             {
-                if (string.IsNullOrEmpty(workspaceID) || string.IsNullOrEmpty(reportId))
+                if (string.IsNullOrEmpty(workspaceId) || string.IsNullOrEmpty(reportId))
                 {
                     return new BadRequestObjectResult("Missing workspaceID or reportID parameter.");
                 }
@@ -130,7 +131,7 @@ namespace PowerBIAutomationApp
                 string accessToken = await FBConfigManager.GetAccessToken();
 
                 // Attempt to delete the report
-                var result = await DeleteReportById(workspaceID, reportId, accessToken);
+                var result = await DeleteReportById(workspaceId, reportId, accessToken);
 
                 return result;
             }
@@ -141,11 +142,14 @@ namespace PowerBIAutomationApp
             }
         }
 
-        public async Task<IActionResult> DeleteReportById(string workspaceID, string reportID, string accessToken)
+        public async Task<IActionResult> DeleteReportById(
+            string workspaceId, 
+            string reportId, 
+            string accessToken)
         {
             using (HttpClient client = new HttpClient())
             {
-                string deleteUrl = $"https://api.powerbi.com/v1.0/myorg/groups/{workspaceID}/reports/{reportID}";
+                string deleteUrl = $"https://api.powerbi.com/v1.0/myorg/groups/{workspaceId}/reports/{reportId}";
 
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
@@ -155,15 +159,15 @@ namespace PowerBIAutomationApp
 
                 if (response.IsSuccessStatusCode)
                 {
-                    _logger.LogInformation($"Successfully deleted report: {reportID}");
-                    return new OkObjectResult($"Successfully deleted report: {reportID}");
+                    _logger.LogInformation($"Successfully deleted report: {reportId}");
+                    return new OkObjectResult($"Successfully deleted report: {reportId}");
                 }
 
                 switch (response.StatusCode)
                 {
                     case System.Net.HttpStatusCode.NotFound: // 404 Report Not Found
-                        _logger.LogWarning($"Report '{reportID}' not found in workspace '{workspaceID}'.");
-                        return new NotFoundObjectResult($"Report '{reportID}' not found in workspace '{workspaceID}'.");
+                        _logger.LogWarning($"Report '{reportId}' not found in workspace '{workspaceId}'.");
+                        return new NotFoundObjectResult($"Report '{reportId}' not found in workspace '{workspaceId}'.");
 
                     case System.Net.HttpStatusCode.Unauthorized: // 401 Unauthorized
                         _logger.LogError("Unauthorized access - invalid or expired token.");
@@ -174,7 +178,7 @@ namespace PowerBIAutomationApp
                         return new ObjectResult("Forbidden - Insufficient permissions.") { StatusCode = StatusCodes.Status403Forbidden };
 
                     default: // Other errors
-                        _logger.LogError($"Failed to delete report '{reportID}': {response.StatusCode} - {responseContent}");
+                        _logger.LogError($"Failed to delete report '{reportId}': {response.StatusCode} - {responseContent}");
                         return new ObjectResult($"Error deleting report: {response.StatusCode} - {responseContent}")
                         {
                             StatusCode = (int)response.StatusCode
@@ -185,10 +189,12 @@ namespace PowerBIAutomationApp
 
         [Function("DeleteSemanticModel")]
         public async Task<HttpResponseData> DeleteSemanticModel([
-            HttpTrigger(AuthorizationLevel.Function, "delete", Route = "workspace/{workspaceId}/semanticmodel/{modelId}")] HttpRequestData req,
-            string workspaceId, string modelId)
+            HttpTrigger(AuthorizationLevel.Function, "delete", 
+            Route = "workspaces/{workspaceId}/semanticmodels/{semanticModelId}")] HttpRequestData req,
+            string workspaceId, 
+            string semanticModelId)
         {
-            _logger.LogInformation($"Deleting semantic model {modelId} in workspace {workspaceId}...");
+            _logger.LogInformation($"Deleting semantic model {semanticModelId} in workspace {workspaceId}...");
 
             string accessToken;
             try
@@ -204,7 +210,7 @@ namespace PowerBIAutomationApp
             // SENDING DELETE REQUEST TO POWER BI API
             try
             {
-                string deleteUrl = $"https://api.powerbi.com/v1.0/myorg/groups/{workspaceId}/datasets/{modelId}";
+                string deleteUrl = $"https://api.powerbi.com/v1.0/myorg/groups/{workspaceId}/datasets/{semanticModelId}";
                 _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
                 HttpResponseMessage response = await _httpClient.DeleteAsync(deleteUrl);
@@ -226,7 +232,10 @@ namespace PowerBIAutomationApp
             return successResponse;
         }
 
-        private async Task<HttpResponseData> CreateErrorResponse(HttpRequestData req, string message, Exception ex)
+        private async Task<HttpResponseData> CreateErrorResponse(
+            HttpRequestData req, 
+            string message, 
+            Exception ex)
         {
             var errorResponse = req.CreateResponse(System.Net.HttpStatusCode.InternalServerError);
             await errorResponse.WriteStringAsync($"{message} Details: {ex.Message}");
@@ -234,8 +243,9 @@ namespace PowerBIAutomationApp
         }
 
         [Function("DeleteWorkspace")]
-        public async Task<HttpResponseData> DeleteWorkspace(
-           [HttpTrigger(AuthorizationLevel.Function, "delete", Route = "workspaces/{workspaceId}/delete")] HttpRequestData req,
+        public async Task<HttpResponseData> DeleteWorkspace([
+            HttpTrigger(AuthorizationLevel.Function, "delete", 
+            Route = "workspaces/{workspaceId}/delete-workspace")] HttpRequestData req,
            string workspaceId)
         {
             _logger.LogInformation($"Attempting to delete workspace: {workspaceId}");

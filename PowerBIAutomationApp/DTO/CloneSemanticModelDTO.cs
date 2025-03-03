@@ -2,7 +2,7 @@
 {
     internal class CloneSemanticModelDTO
     {
-        public required string modelName { get; set; }
+        public required string semanticModelName { get; set; }
         public required string targetWorkspaceId { get; set; }
     }
 }

@@ -10,19 +10,19 @@ namespace PowerBIAutomationApp
     public class ExportFunctions
     {
         private readonly ILogger<ExportFunctions> _logger;
-        // Local My Documents folder
-        private readonly string pbixPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        private readonly string pbixPath = string.Empty;
 
         public ExportFunctions(ILogger<ExportFunctions> logger)
         {
             _logger = logger;
+            pbixPath = FBConfigManager.GetPbixPath();
         }
 
         [Function("ExportSemanticModel")]
         public async Task<IActionResult> ExportSemanticModel([
             HttpTrigger(AuthorizationLevel.Function, "get",
-            Route = "workspaces/{sourceWorkspaceId}/reports/{reportId}/export-semantic-model")] HttpRequest req,
-            string sourceWorkspaceId,
+            Route = "workspaces/{workspaceId}/reports/{reportId}/export-semantic-model")] HttpRequest req,
+            string workspaceId,
             string reportId)
         {
             _logger.LogInformation("Processing export semantic model request.");
@@ -32,14 +32,14 @@ namespace PowerBIAutomationApp
                 string accessToken = await FBConfigManager.GetAccessToken();
 
                 // Validate that workspaceId and modelReportId are not null or empty
-                if (string.IsNullOrEmpty(sourceWorkspaceId) || string.IsNullOrEmpty(reportId))
+                if (string.IsNullOrEmpty(workspaceId) || string.IsNullOrEmpty(reportId))
                 {
                     return new BadRequestObjectResult("workspaceId and modelReportId must be provided and cannot be null or empty.");
                 }
 
                 // Export semantic model
                 string? exportSemanticModel = await ExportSemanticModelAsync(
-                    sourceWorkspaceId,
+                    workspaceId,
                     reportId,
                     accessToken);
 
@@ -55,12 +55,12 @@ namespace PowerBIAutomationApp
 
         public async Task<string?> ExportSemanticModelAsync(
             string workspaceId,
-            string modelReportId,
+            string reportId,
             string accessToken)
         {
             using (HttpClient client = new HttpClient())
             {
-                string exportSemanticUrl = $"https://api.powerbi.com/v1.0/myorg/groups/{workspaceId}/reports/{modelReportId}/Export?downloadType=IncludeModel";
+                string exportSemanticUrl = $"https://api.powerbi.com/v1.0/myorg/groups/{workspaceId}/reports/{reportId}/Export?downloadType=IncludeModel";
 
                 // Set Authorization Header
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);

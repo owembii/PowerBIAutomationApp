@@ -39,17 +39,17 @@ namespace PowerBIAutomationApp
             }
         }
 
-        [Function("GetAllReports")]
+        [Function("GetReports")]
         public async Task<IActionResult> GetAllReports([
             HttpTrigger(AuthorizationLevel.Function, "get",
-            Route = "workspaces/{workspaceID}/reports")] HttpRequest req,
-            string workspaceID)
+            Route = "workspaces/{workspaceId}/reports")] HttpRequest req,
+            string workspaceId)
         {
-            _logger.LogInformation($"Fetching reports for workspace: {workspaceID}");
+            _logger.LogInformation($"Fetching reports for workspace: {workspaceId}");
 
             try
             {
-                if (string.IsNullOrEmpty(workspaceID))
+                if (string.IsNullOrEmpty(workspaceId))
                 {
                     return new BadRequestObjectResult("Missing workspaceID parameter.");
                 }
@@ -58,7 +58,7 @@ namespace PowerBIAutomationApp
                 string accessToken = await FBConfigManager.GetAccessToken();
 
                 // Fetch reports
-                string reportsJson = await FetchReportsAsync(workspaceID, accessToken);
+                string reportsJson = await FetchReportsAsync(workspaceId, accessToken);
 
                 _logger.LogInformation("Successfully retrieved reports.");
                 return new OkObjectResult(reportsJson);
@@ -70,11 +70,13 @@ namespace PowerBIAutomationApp
             }
         }
 
-        private async Task<string> FetchReportsAsync(string workspaceID, string accessToken)
+        private async Task<string> FetchReportsAsync(
+            string workspaceId, 
+            string accessToken)
         {
             using (HttpClient client = new HttpClient())
             {
-                string reportsUrl = $"https://api.powerbi.com/v1.0/myorg/groups/{workspaceID}/reports";
+                string reportsUrl = $"https://api.powerbi.com/v1.0/myorg/groups/{workspaceId}/reports";
 
                 // Set Authorization Header
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
@@ -93,24 +95,25 @@ namespace PowerBIAutomationApp
         }
 
         [Function("GetSemanticModels")]
-        public async Task<IActionResult> GetSemanticModels([HttpTrigger(AuthorizationLevel.Function, "get",
-            Route = "workspaces/{workspaceID}/semanticmodels")] HttpRequest req,
-            string workspaceID)
+        public async Task<IActionResult> GetSemanticModels([
+            HttpTrigger(AuthorizationLevel.Function, "get",
+            Route = "workspaces/{workspaceId}/semanticmodels")] HttpRequest req,
+            string workspaceId)
         {
-            _logger.LogInformation($"Fetching semantic models for workspace: {workspaceID}");
+            _logger.LogInformation($"Fetching semantic models for workspace: {workspaceId}");
 
             try
             {
-                if (string.IsNullOrEmpty(workspaceID))
+                if (string.IsNullOrEmpty(workspaceId))
                 {
-                    return new BadRequestObjectResult("Missing workspaceID parameter.");
+                    return new BadRequestObjectResult("Missing workspaceId parameter.");
                 }
 
                 // Get access token
                 string accessToken = await FBConfigManager.GetAccessToken();
 
                 // Fetch semantic models
-                string modelsJson = await FetchSemanticModelsAsync(workspaceID, accessToken);
+                string modelsJson = await FetchSemanticModelsAsync(workspaceId, accessToken);
 
                 _logger.LogInformation("Successfully retrieved semantic models.");
                 return new OkObjectResult(modelsJson);
@@ -122,11 +125,13 @@ namespace PowerBIAutomationApp
             }
         }
 
-        private async Task<string> FetchSemanticModelsAsync(string workspaceID, string accessToken)
+        private async Task<string> FetchSemanticModelsAsync(
+            string workspaceId,
+            string accessToken)
         {
             using (HttpClient client = new HttpClient())
             {
-                string datasetsUrl = $"https://api.powerbi.com/v1.0/myorg/groups/{workspaceID}/datasets";
+                string datasetsUrl = $"https://api.powerbi.com/v1.0/myorg/groups/{workspaceId}/datasets";
 
                 // Set Authorization Header
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
@@ -144,14 +149,14 @@ namespace PowerBIAutomationApp
             }
         }
 
-        [Function("GetSemanticModelParameterValue")]
+        [Function("GetSemanticModelParameters")]
         public async Task<HttpResponseData> GetSemanticModelParameterValue([
             HttpTrigger(AuthorizationLevel.Function, "get",
-            Route = "workspace/{workspaceId}/semanticmodel/{modelId}/parameters")] HttpRequestData req,
-           string workspaceId,
-           string modelId)
+            Route = "workspaces/{workspaceId}/semanticmodels/{semanticModelId}/parameters")] HttpRequestData req,
+            string workspaceId,
+            string semanticModelId)
         {
-            _logger.LogInformation($"Retrieving parameters for semantic model {modelId} in workspace {workspaceId}...");
+            _logger.LogInformation($"Retrieving parameters for semantic model {semanticModelId} in workspace {workspaceId}...");
 
             string accessToken;
             try
@@ -168,7 +173,7 @@ namespace PowerBIAutomationApp
 
             try
             {
-                string parametersUrl = $"https://api.powerbi.com/v1.0/myorg/groups/{workspaceId}/datasets/{modelId}/parameters";
+                string parametersUrl = $"https://api.powerbi.com/v1.0/myorg/groups/{workspaceId}/datasets/{semanticModelId}/parameters";
 
                 _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
                 HttpResponseMessage response = await _httpClient.GetAsync(parametersUrl);
@@ -199,12 +204,12 @@ namespace PowerBIAutomationApp
 
         }
 
-
         [Function("GetReportId")]
-        public async Task<IActionResult> GetReportId(
-                [HttpTrigger(AuthorizationLevel.Function, "get", Route = "workspaces/{workspaceId}/reports/{reportName}")] HttpRequest req,
-                string workspaceId,
-                string reportName)
+        public async Task<IActionResult> GetReportId([
+            HttpTrigger(AuthorizationLevel.Function, "get", 
+            Route = "workspaces/{workspaceId}/reports/{reportName}/name")] HttpRequest req,
+            string workspaceId,
+            string reportName)
         {
             _logger.LogInformation($"Searching for report: {reportName} in workspace: {workspaceId}");
 
@@ -236,7 +241,10 @@ namespace PowerBIAutomationApp
             }
         }
 
-        public async Task<string> FindReportIdByName(string workspaceId, string reportName, string accessToken)
+        public async Task<string> FindReportIdByName(
+            string workspaceId, 
+            string reportName, 
+            string accessToken)
         {
             using (HttpClient client = new HttpClient())
             {
@@ -270,6 +278,67 @@ namespace PowerBIAutomationApp
                 return null; // Return null if no report found with the given name
             }
 
+        }
+
+        [Function("GetAllWorkspaces")]
+        public async Task<HttpResponseData> GetAllWorkspaces([
+            HttpTrigger(AuthorizationLevel.Function, "get",
+            Route = "workspaces/all")] HttpRequestData req)
+        {
+            _logger.LogInformation("Retrieving all Power BI workspaces...");
+
+            string accessToken;
+            try
+            {
+                accessToken = await FBConfigManager.GetAccessToken();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error getting access token: {ex.Message}");
+                Console.WriteLine($"Error getting access token: {ex}");
+                var errorResponse = req.CreateResponse(System.Net.HttpStatusCode.InternalServerError);
+                await errorResponse.WriteStringAsync($"Error retrieving access token: {ex.Message}");
+                return errorResponse;
+            }
+
+            string workspacesResponse;
+            try
+            {
+                workspacesResponse = await GetAllWorkspacesAsync(accessToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error retrieving workspaces: {ex.Message}");
+                Console.WriteLine($"Error retrieving workspaces: {ex}");
+                var errorResponse = req.CreateResponse(System.Net.HttpStatusCode.InternalServerError);
+                await errorResponse.WriteStringAsync($"Error retrieving workspaces: {ex.Message}");
+                return errorResponse;
+            }
+
+            var response = req.CreateResponse(System.Net.HttpStatusCode.OK);
+            response.Headers.Add("Content-Type", "application/json; charset=utf-8");
+            await response.WriteStringAsync(workspacesResponse);
+            return response;
+        }
+
+
+        private static async Task<string> GetAllWorkspacesAsync(string accessToken)
+        {
+            using (HttpClient client = new HttpClient())
+            {
+                string baseUrl = "https://api.powerbi.com/v1.0/myorg/groups";
+
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                HttpResponseMessage response = await client.GetAsync(baseUrl);
+                string responseJson = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new Exception($"Error retrieving workspaces: {responseJson}");
+                }
+
+                return responseJson;
+            }
         }
     }
 }

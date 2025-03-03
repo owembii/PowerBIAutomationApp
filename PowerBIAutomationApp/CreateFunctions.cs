@@ -20,10 +20,10 @@ namespace PowerBIAutomationApp
             _logger = logger;
         }
 
-        [Function("CreatePowerBIWorkspace")]
+        [Function("CreateWorkspace")]
         public async Task<HttpResponseData> CreateWorkspace([
             HttpTrigger(AuthorizationLevel.Function, "post", 
-            Route = "workspace/create")] HttpRequestData req)
+            Route = "workspaces/create")] HttpRequestData req)
         {
             _logger.LogInformation("Creating Power BI workspace...");
             var requestBody = await JsonSerializer.DeserializeAsync<CreateWorkspaceDTO>(req.Body);
@@ -70,66 +70,9 @@ namespace PowerBIAutomationApp
             return response;
         }
 
-        [Function("GetAllPowerBIWorkspaces")]
-        public async Task<HttpResponseData> GetAllWorkspaces([
-            HttpTrigger(AuthorizationLevel.Function, "get", 
-            Route = "workspaces/all")] HttpRequestData req)
-        {
-            _logger.LogInformation("Retrieving all Power BI workspaces...");
-
-            string accessToken;
-            try
-            {
-                accessToken = await FBConfigManager.GetAccessToken();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error getting access token: {ex.Message}");
-                Console.WriteLine($"Error getting access token: {ex}");
-                var errorResponse = req.CreateResponse(System.Net.HttpStatusCode.InternalServerError);
-                await errorResponse.WriteStringAsync($"Error retrieving access token: {ex.Message}");
-                return errorResponse;
-            }
-
-            string workspacesResponse;
-            try
-            {
-                workspacesResponse = await GetAllWorkspacesAsync(accessToken);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error retrieving workspaces: {ex.Message}");
-                Console.WriteLine($"Error retrieving workspaces: {ex}");
-                var errorResponse = req.CreateResponse(System.Net.HttpStatusCode.InternalServerError);
-                await errorResponse.WriteStringAsync($"Error retrieving workspaces: {ex.Message}");
-                return errorResponse;
-            }
-
-            var response = req.CreateResponse(System.Net.HttpStatusCode.OK);
-            response.Headers.Add("Content-Type", "application/json; charset=utf-8");
-            await response.WriteStringAsync(workspacesResponse);
-            return response;
-        }
-       
-        
-        private static async Task<string> GetAllWorkspacesAsync(string accessToken)
-        {
-            using (HttpClient client = new HttpClient())
-            {
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-                HttpResponseMessage response = await client.GetAsync(baseUrl);
-                string responseJson = await response.Content.ReadAsStringAsync();
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    throw new Exception($"Error retrieving workspaces: {responseJson}");
-                }
-
-                return responseJson;
-            }
-        }
-
-        private static async Task<string> CreateWorkspaceAsync(string accessToken, string workspaceName)
+        private static async Task<string> CreateWorkspaceAsync(
+            string accessToken, 
+            string workspaceName)
         {
             using (HttpClient client = new HttpClient())
             {
@@ -152,14 +95,14 @@ namespace PowerBIAutomationApp
             }
         }
 
-        [Function("AddUserToPowerBIWorkspace")]
+        [Function("AddUserToWorkspace")]
         public async Task<HttpResponseData> AddUser([
             HttpTrigger(AuthorizationLevel.Function, "post", 
-            Route = "workspace/{workspaceId}/addUser")] HttpRequestData req,
+            Route = "workspaces/{workspaceId}/addUser")] HttpRequestData req,
             string workspaceId)
         {
             _logger.LogInformation($"Adding user to Power BI workspace: {workspaceId}");
-            var requestBody = await JsonSerializer.DeserializeAsync<AddUserRequest>(req.Body);
+            var requestBody = await JsonSerializer.DeserializeAsync<AddUserRequestDTO>(req.Body);
             if (requestBody == null || string.IsNullOrEmpty(requestBody.UserEmail) || string.IsNullOrEmpty(requestBody.AccessRight))
             {
                 var errorResponse = req.CreateResponse(System.Net.HttpStatusCode.BadRequest);
@@ -201,7 +144,11 @@ namespace PowerBIAutomationApp
             return response;
         }
 
-        private static async Task<string> AddUserToWorkspaceAsync(string accessToken, string workspaceId, string userEmail, string accessRight)
+        private static async Task<string> AddUserToWorkspaceAsync(
+            string accessToken, 
+            string workspaceId, 
+            string userEmail, 
+            string accessRight)
         {
             string apiUrl = $"{baseUrl}/{workspaceId}/users";
 
@@ -232,16 +179,5 @@ namespace PowerBIAutomationApp
             }
         }
 
-        public class TokenResponse
-        {
-            [JsonPropertyName("access_token")]
-            public string AccessToken { get; set; }
-        }
-
-        public class AddUserRequest
-        {
-            public string UserEmail { get; set; }
-            public string AccessRight { get; set; }
-        }
     }
 }

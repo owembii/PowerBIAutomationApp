@@ -13,6 +13,7 @@ namespace PowerBIAutomationApp.Utilities
         private static readonly string strVaultURL;
         static FBConfigurationManager _fBConfigurationManager;
         private static readonly string strVaultAppReaderName;
+        private static readonly string pbixPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 
 
         static FBConfigManager()
@@ -51,6 +52,10 @@ namespace PowerBIAutomationApp.Utilities
             }
 
             return strSecretValue;
+        }
+        public static string GetPbixPath()
+        {
+            return pbixPath;
         }
         public static async Task<string> GetAccessToken()
         {
