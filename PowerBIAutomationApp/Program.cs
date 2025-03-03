@@ -11,5 +11,6 @@ builder.ConfigureFunctionsWebApplication();
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton<ExportFunctions>();
 builder.Services.AddSingleton<UploadFunctions>();
-
+builder.Services.AddSingleton<GetFunctions>();
 builder.Build().Run();
+

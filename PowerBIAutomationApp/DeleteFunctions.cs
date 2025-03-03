@@ -23,10 +23,13 @@ namespace PowerBIAutomationApp
         private readonly ILogger<DeleteFunctions> _logger;
         private readonly HttpClient _httpClient;
 
-        public DeleteFunctions(ILogger<DeleteFunctions> logger, HttpClient httpClient)
+        private readonly GetFunctions _getFunctions;
+
+        public DeleteFunctions(ILogger<DeleteFunctions> logger, HttpClient httpClient, GetFunctions getFunctions)
         {
             _logger = logger;
             _httpClient = httpClient;
+            _getFunctions = getFunctions;
         }
 
         [Function("DeleteAllSemanticModels")]
@@ -111,6 +114,10 @@ namespace PowerBIAutomationApp
             return successResponse;
         }
 
+
+
+       
+
         [Function("DeleteReport")]
         public async Task<IActionResult> DeleteReport([
             HttpTrigger(AuthorizationLevel.Function, "delete", 
@@ -186,6 +193,85 @@ namespace PowerBIAutomationApp
                 }
             }
         }
+        [Function("DeleteAllReports")]
+        public async Task<IActionResult> DeleteAllReports(
+            [HttpTrigger(AuthorizationLevel.Function, "delete",
+    Route = "workspaces/{workspaceId}/reports/delete-all")] HttpRequest req,
+            string workspaceId)
+        {
+            _logger.LogInformation($"Attempting to delete all reports in workspace: {workspaceId}");
+
+            if (string.IsNullOrEmpty(workspaceId))
+            {
+                return new BadRequestObjectResult("Missing workspaceID parameter.");
+            }
+
+            // Retrieve access token.
+            string accessToken;
+            try
+            {
+                accessToken = await FBConfigManager.GetAccessToken();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error retrieving access token: {ex.Message}");
+                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
+            }
+
+            try
+            {
+                // Use the injected GetFunctions class to fetch all reports.
+                string reportsJson = await _getFunctions.FetchReportsAsync(workspaceId, accessToken);
+                _logger.LogInformation($"Reports JSON: {reportsJson}");
+
+                // Deserialize the JSON into your ReportListDTO.
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var reportList = JsonSerializer.Deserialize<ReportListDTO>(reportsJson, options);
+                var reports = reportList?.Value ?? new List<ReportDTO>();
+
+                if (reports.Count == 0)
+                {
+                    _logger.LogInformation("No reports found in workspace.");
+                    return new OkObjectResult("No reports found in workspace.");
+                }
+
+                // Use a list of objects for deleted reports, each containing the report ID and name.
+                List<object> deletedReports = new List<object>();
+                List<string> failedReports = new List<string>();
+
+                // Loop through each report and attempt deletion.
+                foreach (var report in reports)
+                {
+                    _logger.LogInformation($"Deleting report: {report.Id}");
+                    IActionResult deleteResult = await DeleteReportById(workspaceId, report.Id, accessToken);
+                    if (deleteResult is OkObjectResult)
+                    {
+                        // Add an object with report id and name.
+                        deletedReports.Add(new { Id = report.Id, Name = report.Name });
+                    }
+                    else
+                    {
+                        failedReports.Add(report.Id);
+                    }
+                }
+
+                return new OkObjectResult(new
+                {
+                    Message = "Report deletion process completed.",
+                    DeletedReports = deletedReports,
+                    FailedReports = failedReports
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error during report deletion process: {ex.Message}");
+                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
+            }
+        }
+
+
+
+
 
         [Function("DeleteSemanticModel")]
         public async Task<HttpResponseData> DeleteSemanticModel([

@@ -70,7 +70,7 @@ namespace PowerBIAutomationApp
             }
         }
 
-        private async Task<string> FetchReportsAsync(
+        public async Task<string> FetchReportsAsync(
             string workspaceId, 
             string accessToken)
         {
